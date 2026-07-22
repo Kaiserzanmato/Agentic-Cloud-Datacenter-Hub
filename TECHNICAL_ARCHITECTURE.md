@@ -15,7 +15,7 @@ The application is a **single-page application (SPA)** with no server-side runti
 | Backend | None — no server, no API routes |
 | Database | None — data is hard-coded TypeScript modules bundled into the client |
 | AI integration | None (live); the UI generates a research prompt intended to be pasted into an external LLM (Claude, GPT, Gemini) |
-| Map integration | None — geography is represented via data tables/cards, not a rendered map |
+| Map integration | MapLibre GL JS + free OpenFreeMap "Liberty" tiles — interactive world map with a country-status/capacity overlay |
 | Hosting | Vercel (SPA rewrite to `index.html`) |
 
 ---
@@ -33,7 +33,8 @@ The application is a **single-page application (SPA)** with no server-side runti
 │  ├─ UI primitives (GlassCard, Badge, AnimatedNumber, ...) │
 │  ├─ Hooks (state helpers: filters, animated counters)     │
 │  ├─ Static data modules (TypeScript arrays/objects)       │
-│  └─ Recharts (SVG chart rendering, in-browser only)       │
+│  ├─ Recharts (SVG chart rendering, in-browser only)       │
+│  └─ MapLibre GL (WebGL map, free OpenFreeMap tiles)       │
 │                                                           │
 └───────────────────────┬───────────────────────────────────┘
                          │ static asset fetch (HTML/JS/CSS)
@@ -106,6 +107,7 @@ If a real backend were added later, the natural seams are:
 | `researchData.ts` | Frontier AI model benchmark data, capex trends, regional capacity figures, and other dashboard/chart datasets |
 | `deepResearchPrompt.ts` | `DEEP_RESEARCH_PROMPT_TEMPLATE` and `PRESET_RESEARCH_QUERIES` — the reusable prompt template surfaced by the Deep Research Engine and Export Suite |
 | `updateAuditLog.ts` | Manually maintained change log entries shown in the Audit Log tab |
+| `countryCoordinates.ts` | `[lng, lat]` centroid lookup keyed by ISO alpha-3, used only to place map markers |
 
 Because there is no persistence layer, any user interaction (filters, searches, "research runs") is stateless and resets on page reload — nothing is written back to storage.
 
@@ -152,12 +154,22 @@ All charts share `ResponsiveContainer` for fluid width and custom `Tooltip`/axis
 
 ## 9. Map Integration
 
-**None present.** Despite the platform being explicitly geographic in subject matter (countries, regions, global projects), there is no map library in the dependency tree (no Leaflet, Mapbox GL, react-simple-maps, D3-geo/TopoJSON, or Google Maps). Geography is represented **non-spatially**:
-- `CountryExplorer.tsx` — a filterable grid/list of country cards keyed by ISO 3166 alpha-2/alpha-3 codes, region, and status.
-- `ProjectRegistrySection.tsx` — a filterable/searchable table/list of named projects with a `region`/`country`/`location` text field.
-- Region filtering (`useRegionFilter.ts`, `Navbar` region selector) operates on the `region` string field of the data models, not on map coordinates or a rendered basemap.
+The platform includes an interactive **Global Map** tab (`src/components/map/InfrastructureMap.tsx`) built on **MapLibre GL JS** against the free, tokenless **OpenFreeMap "Liberty"** vector tile style (`https://tiles.openfreemap.org/styles/liberty`) — no Mapbox account or API key required, consistent with the free-stack pattern used in other DocypherLabs dashboards reviewed for this integration.
 
-A future map integration would most naturally render `COUNTRY_REGISTRY` (which already carries ISO alpha-2/alpha-3/numeric codes) as choropleth data via a TopoJSON world map + a library such as `react-simple-maps` or `visx`, colored by `sovereignAiStatus` or `dataCenterCapacityMW`.
+**Architecture:**
+- `src/data/countryCoordinates.ts` — a `[lng, lat]` centroid lookup keyed by ISO alpha-3, joined against `COUNTRY_REGISTRY` at render time. No new data source or backend was introduced; the map is purely a new visualization of existing static registry data.
+- `src/components/map/statusStyle.ts` — shared color scale for `sovereignAiStatus` (`Active Strategy`, `Developing Policy`, `Emerging Hub`, `Constrained`, `Baseline`) and a `capacityToRadius()` helper that scales marker size by `dataCenterCapacityMW` (sqrt-scaled so marker *area*, not radius, tracks capacity).
+- `src/components/map/InfrastructureMap.tsx` — owns map lifecycle (`useEffect` init/cleanup — markers, popups, and the `maplibregl.Map` instance are all removed on unmount), builds a `maplibregl.Marker` per visible country, and re-renders markers whenever the shared `selectedRegion` / `searchQuery` props (same state lifted in `App.tsx` that drives `CountryExplorer` and `ProjectRegistrySection`) or the overlay mode change.
+
+**Overlay modes** (toggle buttons above the map):
+1. **Status Overlay** (default) — marker color encodes `sovereignAiStatus`; a legend renders bottom-left.
+2. **Capacity Overlay** — marker size encodes `dataCenterCapacityMW`; a legend note replaces the status key.
+
+**Interaction:** clicking a marker opens the existing `CountryModal` (the same detail modal used by `CountryExplorer`) — no duplicate UI was built for country detail. Hovering/clicking also surfaces a MapLibre `Popup` built entirely from DOM nodes with `textContent` assignments (never `innerHTML`/`setHTML`), avoiding any injection risk from registry data.
+
+**Failure handling:** a `try/catch` around map construction plus a `map.on('error', ...)` handler sets a `mapFailed` state that swaps the canvas for a plain "tiles unavailable" message, so a tile-host outage degrades gracefully instead of leaving a blank or broken map.
+
+**Not included (future extension):** choropleth country-shape fills (would need a TopoJSON world layer + `react-simple-maps`/`visx`, as in the prior non-spatial approach considered), 3D building/pitch layers, animated pulsing hotspots, or camera fly-to presets — all present in the reference DocypherLabs map implementations reviewed but out of scope for this pass, which focused on a marker-and-overlay map over the existing dataset.
 
 ---
 
@@ -195,6 +207,6 @@ Two "output" paths exist, both client-side only:
 
 1. **Backend + database** — move `src/data/*.ts` into a real data store (Postgres, or a headless CMS) behind an API, so the dataset can be updated without a redeploy.
 2. **Live AI integration** — connect `DeepResearchEngine` to an actual LLM API call (e.g., Claude) instead of the simulated `setInterval` progress, with the existing prompt template as the system/user prompt.
-3. **Map visualization** — add a choropleth world map (e.g., `react-simple-maps` + TopoJSON) driven by the existing `COUNTRY_REGISTRY` ISO codes.
+3. **Map visualization enhancements** — the marker/overlay map is now live (§9); a choropleth country-fill layer (TopoJSON + `react-simple-maps`/`visx`) remains a reasonable follow-up for area-based (rather than point-based) encoding of `sovereignAiStatus`/capacity.
 4. **Routing** — introduce URL-based routing (e.g., React Router) so tabs are deep-linkable and shareable.
 5. **Persistence** — persist user filter/search state and audit log entries beyond a single page session.

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navbar } from './components/layout/Navbar';
 import { ExecutiveDashboard } from './components/sections/ExecutiveDashboard';
 import { DeepResearchEngine } from './components/sections/DeepResearchEngine';
+import { InfrastructureMap } from './components/map/InfrastructureMap';
 import { CountryExplorer } from './components/sections/CountryExplorer';
 import { ProjectRegistrySection } from './components/sections/ProjectRegistrySection';
 import { PowerCoolingSection } from './components/sections/PowerCoolingSection';
@@ -35,6 +36,13 @@ export function App() {
         )}
 
         {activeTab === 'research' && <DeepResearchEngine />}
+
+        {activeTab === 'map' && (
+          <InfrastructureMap
+            selectedRegion={selectedRegion}
+            searchQuery={searchQuery}
+          />
+        )}
 
         {activeTab === 'countries' && (
           <CountryExplorer

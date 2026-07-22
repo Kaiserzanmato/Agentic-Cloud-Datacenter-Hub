@@ -7,9 +7,10 @@ import {
   Zap, 
   History, 
   Download, 
-  Sparkles, 
+  Sparkles,
   Layers,
-  ChevronDown
+  ChevronDown,
+  MapPin
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -45,6 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navItems = [
     { id: 'dashboard', label: 'Executive Dashboard', icon: Layers },
     { id: 'research', label: 'AI Deep Research', icon: Sparkles },
+    { id: 'map', label: 'Global Map', icon: MapPin },
     { id: 'countries', label: 'Country Explorer', icon: Globe },
     { id: 'projects', label: 'Project Registry', icon: Database },
     { id: 'tech', label: 'Power & Hardware', icon: Zap },
