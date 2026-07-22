@@ -1,4 +1,31 @@
-import { COUNTRY_REGISTRY } from '../src/data/countryRegistry';
+const COUNTRY_REGISTRY = [
+  { id: 'USA', name: 'United States', region: 'North America', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 18500, gridReadinessScore: 82, activeProjectsCount: 142, enabled: true },
+  { id: 'CAN', name: 'Canada', region: 'North America', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 1400, gridReadinessScore: 91, activeProjectsCount: 18, enabled: true },
+  { id: 'MEX', name: 'Mexico', region: 'Latin America', sovereignAiStatus: 'Developing Policy', dataCenterCapacityMW: 620, gridReadinessScore: 68, activeProjectsCount: 12, enabled: true },
+  { id: 'PHL', name: 'Philippines', region: 'Southeast Asia', sovereignAiStatus: 'Developing Policy', dataCenterCapacityMW: 450, gridReadinessScore: 71, activeProjectsCount: 16, enabled: true },
+  { id: 'SGP', name: 'Singapore', region: 'Southeast Asia', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 1100, gridReadinessScore: 96, activeProjectsCount: 22, enabled: true },
+  { id: 'MYS', name: 'Malaysia', region: 'Southeast Asia', sovereignAiStatus: 'Emerging Hub', dataCenterCapacityMW: 1350, gridReadinessScore: 84, activeProjectsCount: 28, enabled: true },
+  { id: 'IDN', name: 'Indonesia', region: 'Southeast Asia', sovereignAiStatus: 'Developing Policy', dataCenterCapacityMW: 780, gridReadinessScore: 74, activeProjectsCount: 19, enabled: true },
+  { id: 'VNM', name: 'Viet Nam', region: 'Southeast Asia', sovereignAiStatus: 'Emerging Hub', dataCenterCapacityMW: 310, gridReadinessScore: 69, activeProjectsCount: 9, enabled: true },
+  { id: 'THA', name: 'Thailand', region: 'Southeast Asia', sovereignAiStatus: 'Developing Policy', dataCenterCapacityMW: 520, gridReadinessScore: 78, activeProjectsCount: 14, enabled: true },
+  { id: 'JPN', name: 'Japan', region: 'East Asia', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 2900, gridReadinessScore: 92, activeProjectsCount: 38, enabled: true },
+  { id: 'KOR', name: 'Korea, Republic of', region: 'East Asia', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 1650, gridReadinessScore: 94, activeProjectsCount: 26, enabled: true },
+  { id: 'TWN', name: 'Taiwan', region: 'East Asia', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 980, gridReadinessScore: 88, activeProjectsCount: 21, enabled: true },
+  { id: 'CHN', name: 'China', region: 'East Asia', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 14200, gridReadinessScore: 86, activeProjectsCount: 110, enabled: true },
+  { id: 'DEU', name: 'Germany', region: 'Europe', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 2400, gridReadinessScore: 89, activeProjectsCount: 34, enabled: true },
+  { id: 'GBR', name: 'United Kingdom', region: 'Europe', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 2150, gridReadinessScore: 87, activeProjectsCount: 31, enabled: true },
+  { id: 'IRL', name: 'Ireland', region: 'Europe', sovereignAiStatus: 'Constrained', dataCenterCapacityMW: 1300, gridReadinessScore: 65, activeProjectsCount: 15, enabled: true },
+  { id: 'FRA', name: 'France', region: 'Europe', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 1750, gridReadinessScore: 95, activeProjectsCount: 24, enabled: true },
+  { id: 'NLD', name: 'Netherlands', region: 'Europe', sovereignAiStatus: 'Constrained', dataCenterCapacityMW: 1200, gridReadinessScore: 78, activeProjectsCount: 12, enabled: true },
+  { id: 'NOR', name: 'Norway', region: 'Europe', sovereignAiStatus: 'Emerging Hub', dataCenterCapacityMW: 650, gridReadinessScore: 98, activeProjectsCount: 11, enabled: true },
+  { id: 'ARE', name: 'United Arab Emirates', region: 'Middle East', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 920, gridReadinessScore: 93, activeProjectsCount: 23, enabled: true },
+  { id: 'SAU', name: 'Saudi Arabia', region: 'Middle East', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 850, gridReadinessScore: 90, activeProjectsCount: 27, enabled: true },
+  { id: 'IND', name: 'India', region: 'South Asia', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 1850, gridReadinessScore: 79, activeProjectsCount: 45, enabled: true },
+  { id: 'BRA', name: 'Brazil', region: 'Latin America', sovereignAiStatus: 'Developing Policy', dataCenterCapacityMW: 980, gridReadinessScore: 81, activeProjectsCount: 17, enabled: true },
+  { id: 'ZAF', name: 'South Africa', region: 'Africa', sovereignAiStatus: 'Emerging Hub', dataCenterCapacityMW: 420, gridReadinessScore: 62, activeProjectsCount: 8, enabled: true },
+  { id: 'KEN', name: 'Kenya', region: 'Africa', sovereignAiStatus: 'Developing Policy', dataCenterCapacityMW: 190, gridReadinessScore: 73, activeProjectsCount: 5, enabled: true },
+  { id: 'AUS', name: 'Australia', region: 'Oceania', sovereignAiStatus: 'Active Strategy', dataCenterCapacityMW: 1620, gridReadinessScore: 89, activeProjectsCount: 29, enabled: true },
+];
 
 const MAX_QUESTION_LENGTH = 1200;
 const VALID_TABS = new Set([
