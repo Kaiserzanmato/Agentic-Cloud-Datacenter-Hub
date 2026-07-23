@@ -1,28 +1,47 @@
-import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  Play, 
-  Copy, 
-  Check, 
-  Sliders, 
-  ShieldAlert, 
-  CheckCircle2, 
+import React, { useState, useEffect } from 'react';
+import {
+  Sparkles,
+  Play,
+  Copy,
+  Check,
+  Sliders,
+  ShieldAlert,
+  CheckCircle2,
   RefreshCw
 } from 'lucide-react';
 import { GlassCard } from '../ui/GlassCard';
 import { PRESET_RESEARCH_QUERIES, DEEP_RESEARCH_PROMPT_TEMPLATE } from '../../data/deepResearchPrompt';
+import { getRegionReport } from '../../data/regionResearchReports';
 
-export const DeepResearchEngine: React.FC = () => {
-  const [userQuery, setUserQuery] = useState(
-    'Analyze Southeast Asia sovereign cloud & datacenter power grid constraints across Philippines, Malaysia, Singapore, and Indonesia in 2026.'
-  );
-  const [selectedRegion, setSelectedRegion] = useState('Southeast Asia');
+interface DeepResearchEngineProps {
+  selectedRegion?: string;
+}
+
+export const DeepResearchEngine: React.FC<DeepResearchEngineProps> = ({ selectedRegion: propRegion = 'Southeast Asia' }) => {
+  const [userQuery, setUserQuery] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState(propRegion);
+
+  useEffect(() => {
+    setSelectedRegion(propRegion);
+    // Update default query when region changes
+    setUserQuery(`Analyze ${propRegion} sovereign cloud & datacenter power grid constraints in 2026.`);
+  }, [propRegion]);
   const [focusCategory, setFocusCategory] = useState('Sovereign Cloud & Data Centers');
   const [confidenceThreshold, setConfidenceThreshold] = useState<'All' | 'High' | 'Medium'>('All');
   const [isGenerating, setIsGenerating] = useState(false);
   const [executionStep, setExecutionStep] = useState(0);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(true);
+  const [reportRegion, setReportRegion] = useState(propRegion);
+  const [reportCategory, setReportCategory] = useState('Sovereign Cloud & Data Centers');
+
+  // Keep the rendered report in sync with the active region even before the
+  // user clicks "Execute Deep Research" (e.g. selecting a region from the navbar).
+  useEffect(() => {
+    setReportRegion(propRegion);
+  }, [propRegion]);
+
+  const activeReport = getRegionReport(reportRegion);
 
   const steps = [
     'Initializing Deep Research Agent & Loading ISO 3166-1 Registry...',
@@ -42,6 +61,8 @@ export const DeepResearchEngine: React.FC = () => {
           clearInterval(interval);
           setIsGenerating(false);
           setReportGenerated(true);
+          setReportRegion(selectedRegion);
+          setReportCategory(focusCategory);
           return prev;
         }
         return prev + 1;
@@ -235,7 +256,7 @@ export const DeepResearchEngine: React.FC = () => {
                   Verified Audit Report
                 </span>
                 <span className="text-xs font-mono text-slate-600 dark:text-slate-400">
-                  Target: {selectedRegion} | Category: {focusCategory}
+                  Target: {reportRegion} | Category: {reportCategory}
                 </span>
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-1">
@@ -256,15 +277,11 @@ export const DeepResearchEngine: React.FC = () => {
               1. Executive Summary & Key Strategic Findings
             </h4>
             <div className="bg-slate-50/60 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-700 dark:text-slate-300 leading-relaxed space-y-2">
-              <p>
-                • <strong>Hyperscale Infrastructure Acceleration:</strong> Southeast Asia datacenter capacity is accelerating at 38% CAGR, led by Malaysia (Johor), Singapore, and the Philippines, driven by sovereign AI compliance mandates and subsea fiber cable landings.
-              </p>
-              <p>
-                • <strong>Power & Grid Congestion:</strong> High-density AI racks (&gt;40kW/rack) require direct-to-chip liquid cooling. Electrical grid interconnections in Luzon (Philippines) and Johor (Malaysia) face 2026/2027 transformer lead-time delays.
-              </p>
-              <p>
-                • <strong>Sovereign Cloud Policies:</strong> DICT Philippines, EDB Singapore, and MDEC Malaysia have established data-resiliency protocols requiring zero cross-border data leakage for government and banking workloads.
-              </p>
+              {activeReport.summaryBullets.map((bullet) => (
+                <p key={bullet.label}>
+                  • <strong>{bullet.label}:</strong> {bullet.text}
+                </p>
+              ))}
             </div>
           </div>
 
@@ -287,33 +304,23 @@ export const DeepResearchEngine: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800/60 text-slate-800 dark:text-slate-200">
-                  <tr>
-                    <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Philippines</td>
-                    <td className="py-2.5 px-3">STT Clark Sovereign DC Campus</td>
-                    <td className="py-2.5 px-3">Sovereign AI Cluster</td>
-                    <td className="py-2.5 px-3 text-cyan-400">Under Construction</td>
-                    <td className="py-2.5 px-3 font-mono">$1.2B</td>
-                    <td className="py-2.5 px-3 font-mono">124 MW</td>
-                    <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">High</span></td>
-                  </tr>
-                  <tr>
-                    <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Malaysia</td>
-                    <td className="py-2.5 px-3">YTL Green AI Supercomputer</td>
-                    <td className="py-2.5 px-3">AI Supercomputer</td>
-                    <td className="py-2.5 px-3 text-emerald-400">Operational</td>
-                    <td className="py-2.5 px-3 font-mono">$4.3B</td>
-                    <td className="py-2.5 px-3 font-mono">500 MW</td>
-                    <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">High</span></td>
-                  </tr>
-                  <tr>
-                    <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Singapore</td>
-                    <td className="py-2.5 px-3">Keppel Floating DC Platform</td>
-                    <td className="py-2.5 px-3">Colocation DC</td>
-                    <td className="py-2.5 px-3 text-cyan-400">Under Construction</td>
-                    <td className="py-2.5 px-3 font-mono">$750M</td>
-                    <td className="py-2.5 px-3 font-mono">80 MW</td>
-                    <td className="py-2.5 px-3"><span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">High</span></td>
-                  </tr>
+                  {activeReport.projects
+                    .filter((project) => confidenceThreshold === 'All' || project.confidence === confidenceThreshold)
+                    .map((project) => (
+                      <tr key={`${project.country}-${project.projectName}`}>
+                        <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">{project.country}</td>
+                        <td className="py-2.5 px-3">{project.projectName}</td>
+                        <td className="py-2.5 px-3">{project.category}</td>
+                        <td className={`py-2.5 px-3 ${project.statusColor}`}>{project.status}</td>
+                        <td className="py-2.5 px-3 font-mono">{project.capex}</td>
+                        <td className="py-2.5 px-3 font-mono">{project.capacity}</td>
+                        <td className="py-2.5 px-3">
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
+                            {project.confidence}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -325,25 +332,18 @@ export const DeepResearchEngine: React.FC = () => {
               3. Environmental & Grid Constraint Matrix
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                <span className="font-bold text-amber-400 block flex items-center space-x-1.5">
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Grid Power Congestion</span>
-                </span>
-                <p className="text-slate-700 dark:text-slate-300">
-                  Peak demand in Johor and Manila Metro regions exceeds grid reserve margins by 14%. Micro-grids and direct PPA contracts with renewable suppliers are required for 2026/2027 cluster commissioning.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                <span className="font-bold text-cyan-400 block flex items-center space-x-1.5">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Liquid Cooling Efficiency</span>
-                </span>
-                <p className="text-slate-700 dark:text-slate-300">
-                  Switching to closed-loop direct-to-chip liquid cooling lowers PUE from 1.55 to 1.18 in tropical high-humidity climates, saving up to 40% on operational electricity costs.
-                </p>
-              </div>
+              {activeReport.risks.map((risk) => (
+                <div
+                  key={risk.title}
+                  className="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5"
+                >
+                  <span className={`font-bold block flex items-center space-x-1.5 ${risk.icon === 'warning' ? 'text-amber-400' : 'text-cyan-400'}`}>
+                    {risk.icon === 'warning' ? <ShieldAlert className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                    <span>{risk.title}</span>
+                  </span>
+                  <p className="text-slate-700 dark:text-slate-300">{risk.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </GlassCard>

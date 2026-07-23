@@ -29,8 +29,39 @@ const COUNTRY_REGISTRY = [
 
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 const DEEPSEEK_MODEL = 'deepseek-v4-flash';
-const DATA_VERSION = 'country-registry-2026-07-22';
+const DATA_VERSION = 'country-registry-2026-07-22-pax-silica-v1';
 const MAX_QUESTION_LENGTH = 1200;
+
+const PAX_SILICA_KNOWLEDGE = {
+  framework: 'Pax Silica - US-led technology supply chain security initiative (Dec 2025+)',
+  signatories: 24,
+  endorsingEconomies: 35,
+  capitalVehicles: {
+    projectVault: 'US$10B EXIM strategic critical minerals reserve',
+    paxSilicaFund: 'US$250M de-risking seed capital',
+    forgeNetwork: 'Multilateral critical-minerals coordination forum',
+  },
+  flagshipProjects: {
+    newClarkCityPhilippines: '4,000 acres (1,620 ha) industrial hub in Luzon Economic Corridor - semiconductor ATP, PCBs, edge compute. Status: bilateral negotiation (2-year frame). Risks: water strain, power grid capacity, land displacement, sovereignty debates, ATP low-value lock-in (5-10% value-add).',
+    panamaCustomsPilot: 'AI-driven cryptographic logistics tracking (PaxPass) across Panama Canal. Status: pilot design phase. Purpose: real-time container provenance, automated customs clearance.',
+    stanfordFoundrySchool: 'Academic-industrial workforce training partnership with Stanford HAI. Focus: semiconductor technicians, AI engineers, supply-chain risk analysts.',
+  },
+  riskProfile: {
+    environmental: 'Water resource degradation (Sacobia Watershed in Philippines), power grid instability (Luzon 300-800 MW demand), critical mineral extraction hazards (HPAL processing, tailings, acid mine drainage)',
+    socioeconomic: 'Land displacement, ancestral domain disputes (Aeta populations), ATP labor-intensive low-margin lock-in (5-10% value-add concentration)',
+    geopolitical: 'China MOFCOM countermeasures (June 22 2026), bipolar tech stack fragmentation, supply chain bifurcation into Western vs Eastern ecosystems',
+    sovereignty: 'Philippine 1987 Constitution mandates domestic legal jurisdiction. Reject extraterritoriality proposals. PEZA zones operate under Philippine law only.',
+  },
+  valueChain: 'Extraction (Ni/Cu/REE) → Refining/Stockpiling (Project Vault) → Fabrication (US/TW/KR wafers) → Advanced ATP (PH/SG/MY) → Compute Deployment (member nations)',
+  keyCountries: {
+    Philippines: 'Regional manufacturing node. New Clark City hub 1,620 ha. Risks: water, power, land claims, sovereignty. CREATE MORE Act (RA 12066) fiscal incentives.',
+    USA: 'Convenor. Project Vault ($10B EXIM). Strategic mineral stockpiling.',
+    Japan: 'Technology/equipment alignment. Lithography chemicals, wafers.',
+    Australia: 'Resource supplier. Lithium, rare earths, nickel.',
+    Netherlands: 'Equipment anchor. ASML photolithography.',
+    Panama: 'Logistics anchor. PaxPass customs pilot.',
+  },
+};
 const VALID_TABS = new Set([
   'dashboard',
   'research',
@@ -223,7 +254,7 @@ async function callDeepSeek({ question, tab, region }) {
 
   const { countries, ranked, constrained, totalCapacity, totalProjects } = getRegistrySnapshot(region);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 18_000);
+  const timeout = setTimeout(() => controller.abort(), 28_000);
 
   try {
     const response = await fetch(DEEPSEEK_URL, {
@@ -236,13 +267,13 @@ async function callDeepSeek({ question, tab, region }) {
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         temperature: 0.2,
-        max_tokens: 900,
+        max_tokens: 1600,
         response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
             content:
-              'You are the Aethel Global AI Research Agent. Use only the supplied registry context. Do not invent live external facts. Return strict JSON with keys answer and citations. citations must be an array of {title, source}.',
+              'You are the Aethel Global AI Research Agent specializing in AI infrastructure, data centers, critical minerals, and Pax Silica geopolitical coordination. Reference both country registry data AND Pax Silica framework details (capital vehicles, flagship projects, risks, signatories). When users ask about: (1) Specific countries—cite data center capacity, grid readiness, Pax Silica role; (2) Supply chain—reference value chain integration; (3) Risks—discuss environmental (water/power/minerals), socioeconomic (land/labor), geopolitical (China countermeasures, bifurcation), sovereignty issues; (4) Philippines—highlight New Clark City 1,620ha hub, CREATE MORE Act, water/power challenges, Aeta domain concerns. Use only supplied registry and Pax Silica context. Do not invent facts. Return strict JSON with keys answer and citations (array of {title, source}). Keep answer under 250 words.',
           },
           {
             role: 'user',
@@ -259,6 +290,7 @@ async function callDeepSeek({ question, tab, region }) {
                 topCapacityCountries: ranked,
                 constrainedCountries: constrained,
               },
+              paxSilicaContext: PAX_SILICA_KNOWLEDGE,
             }),
           },
         ],
@@ -266,17 +298,22 @@ async function callDeepSeek({ question, tab, region }) {
     });
 
     if (!response.ok) {
+      const errorBody = await response.text().catch(() => '<unreadable body>');
+      console.error(`DeepSeek request failed: HTTP ${response.status} ${response.statusText} - ${errorBody}`);
       return null;
     }
 
     const completion = await response.json();
     const content = completion?.choices?.[0]?.message?.content;
+    const finishReason = completion?.choices?.[0]?.finish_reason;
     if (typeof content !== 'string') {
+      console.error(`DeepSeek response missing message content: ${JSON.stringify(completion)}`);
       return null;
     }
 
     const parsedPayload = validateModelPayload(parseModelJson(content));
     if (!parsedPayload) {
+      console.error(`DeepSeek response failed JSON validation (finish_reason=${finishReason}): ${content}`);
       return null;
     }
 
@@ -291,12 +328,17 @@ async function callDeepSeek({ question, tab, region }) {
         model: DEEPSEEK_MODEL,
       }),
     };
-  } catch {
+  } catch (error) {
+    console.error(`DeepSeek request threw: ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
     return null;
   } finally {
     clearTimeout(timeout);
   }
 }
+
+export const config = {
+  maxDuration: 30,
+};
 
 export default async function handler(request, response) {
   if (request.method === 'OPTIONS') {

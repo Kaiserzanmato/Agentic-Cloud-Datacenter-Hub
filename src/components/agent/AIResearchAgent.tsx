@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bot, Loader2, RotateCcw, Send, X } from 'lucide-react';
+import { Bot, Eraser, Loader2, Send, X } from 'lucide-react';
 
 interface AIResearchAgentProps {
   activeTab: string;
@@ -22,8 +22,6 @@ interface AgentMessage {
   citations: ResearchCitation[];
 }
 
-const starterQuestion = 'Which projects or regions deserve the closest attention?';
-
 const presetQuestions = [
   'Which countries combine high AI capacity with grid or policy risk?',
   'Where should hyperscaler CapEx monitoring focus this quarter?',
@@ -31,17 +29,11 @@ const presetQuestions = [
   'What power and cooling constraints deserve executive attention?',
 ];
 
-const initialMessages: AgentMessage[] = [
-  {
-    role: 'assistant',
-    content: starterQuestion,
-    citations: [],
-  },
-];
+const initialMessages: AgentMessage[] = [];
 
 export function AIResearchAgent({ activeTab, selectedRegion }: AIResearchAgentProps) {
   const [isOpen, setIsOpen] = useState(true);
-  const [question, setQuestion] = useState(starterQuestion);
+  const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<AgentMessage[]>(initialMessages);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,9 +45,11 @@ export function AIResearchAgent({ activeTab, selectedRegion }: AIResearchAgentPr
 
   const clearChat = () => {
     setMessages(initialMessages);
-    setQuestion(starterQuestion);
+    setQuestion('');
     setError(null);
   };
+
+  const hasRealConversation = messages.length > 0;
 
   const submitQuestion = async (nextQuestion = question) => {
     const trimmedQuestion = nextQuestion.trim();
@@ -142,7 +136,7 @@ export function AIResearchAgent({ activeTab, selectedRegion }: AIResearchAgentPr
             title="Clear chat"
             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-900 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
           >
-            <RotateCcw className="h-5 w-5" />
+            <Eraser className="h-5 w-5" />
           </button>
           <button
             type="button"
@@ -160,24 +154,26 @@ export function AIResearchAgent({ activeTab, selectedRegion }: AIResearchAgentPr
         claims before making decisions.
       </div>
 
-      <div className="border-b border-slate-800 px-6 py-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Pre-defined questions
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {presetQuestions.map((presetQuestion) => (
-            <button
-              key={presetQuestion}
-              type="button"
-              onClick={() => void submitQuestion(presetQuestion)}
-              disabled={isLoading}
-              className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-left text-xs leading-5 text-slate-300 transition hover:border-cyan-500/60 hover:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {presetQuestion}
-            </button>
-          ))}
+      {!hasRealConversation && (
+        <div className="border-b border-slate-800 px-6 py-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Pre-defined questions
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {presetQuestions.map((presetQuestion) => (
+              <button
+                key={presetQuestion}
+                type="button"
+                onClick={() => void submitQuestion(presetQuestion)}
+                disabled={isLoading}
+                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-left text-xs leading-5 text-slate-300 transition hover:border-cyan-500/60 hover:text-cyan-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {presetQuestion}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
         {messages.map((message, index) => (
@@ -236,7 +232,6 @@ export function AIResearchAgent({ activeTab, selectedRegion }: AIResearchAgentPr
             {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
         </div>
-        <p className="mt-2 text-right text-xs text-slate-500">{question.length}/1200</p>
       </footer>
     </aside>
   );

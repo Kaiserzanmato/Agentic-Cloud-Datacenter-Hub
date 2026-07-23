@@ -8,8 +8,18 @@ export function Footer() {
           <p className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-1">
             The Strategic Horizon 2026
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-            DocypherLabs — Cloud & Data Center Convention 2026
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 font-mono uppercase tracking-[0.15em]">
+            POWERED BY{' '}
+            <a
+              href="https://docypherlabs.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+            >
+              <span className="text-amber-400 font-semibold">DocypherLabs</span>
+              <span className="text-slate-500"> | </span>
+              <span className="text-slate-700 dark:text-slate-300">Research &amp; Intelligence</span>
+            </a>
           </p>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 max-w-lg mx-auto leading-relaxed">
             Data sources: IEA, Precedence Research, Goldman Sachs, company filings, regulatory publications.

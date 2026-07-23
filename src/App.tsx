@@ -10,6 +10,7 @@ import { ProjectRegistrySection } from './components/sections/ProjectRegistrySec
 import { PowerCoolingSection } from './components/sections/PowerCoolingSection';
 import { AuditLogSection } from './components/sections/AuditLogSection';
 import { ExportSuite } from './components/sections/ExportSuite';
+import { VideoBriefingSection } from './components/sections/VideoBriefingSection';
 import { Footer } from './components/sections/Footer';
 import { AIResearchAgent } from './components/agent/AIResearchAgent';
 
@@ -42,10 +43,11 @@ export function App() {
         {activeTab === 'dashboard' && (
           <ExecutiveDashboard
             onNavigateToTab={setActiveTab}
+            selectedRegion={selectedRegion}
           />
         )}
 
-        {activeTab === 'research' && <DeepResearchEngine />}
+        {activeTab === 'research' && <DeepResearchEngine selectedRegion={selectedRegion} />}
 
         {activeTab === 'map' && (
           <InfrastructureMap
@@ -74,6 +76,8 @@ export function App() {
         )}
 
         {activeTab === 'tech' && <PowerCoolingSection />}
+
+        {activeTab === 'video' && <VideoBriefingSection />}
 
         {activeTab === 'audit' && <AuditLogSection />}
 

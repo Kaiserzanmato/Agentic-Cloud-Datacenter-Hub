@@ -1,16 +1,17 @@
-import React from 'react';
-import { 
-  Globe, 
-  Cpu, 
-  Search, 
-  Database, 
-  Zap, 
-  History, 
-  Download, 
+import React, { useState, useMemo } from 'react';
+import {
+  Globe,
+  Cpu,
+  Search,
+  Database,
+  Zap,
+  History,
+  Download,
   Sparkles,
   Layers,
   ChevronDown,
-  MapPin
+  MapPin,
+  Clapperboard
 } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import type { ThemeMode } from '@/hooks/useTheme';
@@ -26,6 +27,38 @@ interface NavbarProps {
   setThemeMode: (mode: ThemeMode) => void;
 }
 
+const COUNTRIES_LOCATIONS = [
+  { name: 'United States', region: 'North America', code: 'USA' },
+  { name: 'Canada', region: 'North America', code: 'CAN' },
+  { name: 'Mexico', region: 'Latin America', code: 'MEX' },
+  { name: 'Philippines', region: 'Southeast Asia', code: 'PHL' },
+  { name: 'Singapore', region: 'Southeast Asia', code: 'SGP' },
+  { name: 'Malaysia', region: 'Southeast Asia', code: 'MYS' },
+  { name: 'Indonesia', region: 'Southeast Asia', code: 'IDN' },
+  { name: 'Vietnam', region: 'Southeast Asia', code: 'VNM' },
+  { name: 'Thailand', region: 'Southeast Asia', code: 'THA' },
+  { name: 'Japan', region: 'East Asia', code: 'JPN' },
+  { name: 'South Korea', region: 'East Asia', code: 'KOR' },
+  { name: 'Taiwan', region: 'East Asia', code: 'TWN' },
+  { name: 'China', region: 'East Asia', code: 'CHN' },
+  { name: 'Germany', region: 'Europe', code: 'DEU' },
+  { name: 'United Kingdom', region: 'Europe', code: 'GBR' },
+  { name: 'France', region: 'Europe', code: 'FRA' },
+  { name: 'Netherlands', region: 'Europe', code: 'NLD' },
+  { name: 'Ireland', region: 'Europe', code: 'IRL' },
+  { name: 'Norway', region: 'Europe', code: 'NOR' },
+  { name: 'UAE', region: 'Middle East', code: 'ARE' },
+  { name: 'Saudi Arabia', region: 'Middle East', code: 'SAU' },
+  { name: 'Qatar', region: 'Middle East', code: 'QAT' },
+  { name: 'India', region: 'South Asia', code: 'IND' },
+  { name: 'Brazil', region: 'Latin America', code: 'BRA' },
+  { name: 'Panama', region: 'Latin America', code: 'PAN' },
+  { name: 'Argentina', region: 'Latin America', code: 'ARG' },
+  { name: 'Chile', region: 'Latin America', code: 'CHL' },
+  { name: 'Australia', region: 'Oceania', code: 'AUS' },
+  { name: 'New Clark City', region: 'Southeast Asia', code: 'NCC' },
+];
+
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
@@ -36,6 +69,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   themeMode,
   setThemeMode
 }) => {
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+
   const regions = [
     'All Regions',
     'North America',
@@ -49,6 +84,19 @@ export const Navbar: React.FC<NavbarProps> = ({
     'Oceania'
   ];
 
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const query = searchQuery.toLowerCase();
+    return COUNTRIES_LOCATIONS
+      .filter(item =>
+        item.name.toLowerCase().includes(query) ||
+        item.region.toLowerCase().includes(query) ||
+        item.code.toLowerCase().includes(query)
+      )
+      .slice(0, 8);
+  }, [searchQuery]);
+
   const navItems = [
     { id: 'dashboard', label: 'Executive Dashboard', icon: Layers },
     { id: 'research', label: 'AI Deep Research', icon: Sparkles },
@@ -56,6 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'countries', label: 'Country Explorer', icon: Globe },
     { id: 'projects', label: 'Project Registry', icon: Database },
     { id: 'tech', label: 'Power & Hardware', icon: Zap },
+    { id: 'video', label: 'Video Briefing', icon: Clapperboard },
     { id: 'audit', label: 'Report Audit Log', icon: History },
     { id: 'export', label: 'Export Suite', icon: Download },
   ];
@@ -87,16 +136,41 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Global Controls: Search & Region Filter */}
         <div className="flex items-center space-x-3 flex-1 max-w-md">
-          {/* Search bar */}
+          {/* Search bar with autocomplete */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 z-10" />
             <input
               type="text"
-              placeholder="Search 249 countries, projects, GPUs..."
+              placeholder="Search countries, regions, projects..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearchDropdown(true);
+              }}
+              onFocus={() => setShowSearchDropdown(true)}
+              onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
               className="w-full pl-9 pr-4 py-1.5 bg-slate-100/90 dark:bg-slate-900/90 border border-slate-300/60 dark:border-slate-700/60 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
             />
+
+            {/* Autocomplete Dropdown */}
+            {showSearchDropdown && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden">
+                {searchSuggestions.map((item) => (
+                  <button
+                    key={`${item.code}-${item.name}`}
+                    onClick={() => {
+                      setSearchQuery(item.name);
+                      setSelectedRegion(item.region);
+                      setShowSearchDropdown(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs text-slate-800 dark:text-slate-200 hover:bg-cyan-500/10 dark:hover:bg-cyan-500/20 border-b border-slate-200 dark:border-slate-800 last:border-b-0 transition-colors"
+                  >
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-slate-600 dark:text-slate-500 text-[10px]">{item.region} • {item.code}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Region Dropdown */}
